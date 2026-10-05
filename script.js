@@ -1,5 +1,5 @@
-const SUPABASE_URL='https://xvxdhcxtyxqxlofzmwwm.supabase.co';
-const SUPABASE_PUBLISHABLE_KEY='sb_publishable_8mMerHNidIG_SGRs5yJCGA_Nbe6gqhx';
+const SUPABASE_URL='https://frqqjvsdkjzrsiuflcax.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY='sb_publishable_lRSzfopmPO_kMWaT70WagA_YrEI_fjB';
 const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
 let budget=500000;
 let items=[];
