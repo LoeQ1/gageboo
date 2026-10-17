@@ -694,6 +694,8 @@ html, body {
 }
 
 .form-input {
+  width: 100%;
+  min-width: 0;
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
   padding: 12px 14px;
@@ -711,8 +713,12 @@ html, body {
 
 .form-row-2 {
   display: grid;
-  grid-template-columns: 1fr 1fr;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   gap: 12px;
+  width: 100%;
+}
+.form-row-2 .form-group {
+  min-width: 0;
 }
 
 .type-selector {
