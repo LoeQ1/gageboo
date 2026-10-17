@@ -49,30 +49,63 @@ function togglePayment(){document.getElementById('payment-row').style.display=do
 function fmt(n){return Math.round(n).toLocaleString();}
 function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));}
 
+function cleanMerchant(s){return s.replace(/주식회사\s*/g,'').replace(/\s*\(.*?\)/g,'').replace(/\s*(Inc\.|Co\.,?Ltd\.?)\s*/gi,'').trim();}
+
+function parseLotteSms(txt){
+  const lines=txt.split('\n').map(l=>l.trim()).filter(Boolean);
+  let amount=null,date='',merchant='',status='수동입력';
+  for(const line of lines){
+    const amtM=line.match(/([\d,]+)원\s*(.*)/);
+    if(amtM&&!amount){
+      amount=parseInt(amtM[1].replace(/,/g,''));
+      if(amtM[2].includes('취소')) status='취소';
+    }
+    const dateM=line.match(/^(\d{2})\/(\d{2})$/);
+    if(dateM&&!date){const y=new Date().getFullYear();date=y+'-'+dateM[1]+'-'+dateM[2];}
+  }
+  if(lines.length>0) merchant=cleanMerchant(lines[0]);
+  return{amount,date,merchant,status,card:'롯데'};
+}
+
+function parseHyundaiSms(txt){
+  const lines=txt.split('\n').map(l=>l.trim()).filter(Boolean);
+  let amount=null,date='',merchant='',status='수동입력';
+  for(const line of lines){
+    const dateM=line.match(/(\d{2})\/(\d{2})/);
+    if(dateM&&!date){const y=new Date().getFullYear();date=y+'-'+dateM[1]+'-'+dateM[2];}
+    const amtM=line.match(/([\d,]+)원/);
+    if(amtM&&!amount) amount=parseInt(amtM[1].replace(/,/g,''));
+  }
+  for(let i=lines.length-1;i>=0;i--){
+    const line=lines[i];
+    if(line.includes('현대카드')||/([\d,]+)원/.test(line)||/\d{2}\/\d{2}/.test(line)||/회원님|승인 안내/.test(line)) continue;
+    const cleaned=cleanMerchant(line);
+    if(cleaned.length>=2){merchant=cleaned;break;}
+  }
+  return{amount,date,merchant,status,card:'현대'};
+}
+
 function parseSms(){
   const txt=document.getElementById('sms').value;
   const result=document.getElementById('parsed-result');
   if(!txt.trim()){result.innerHTML='';return;}
-  let amount=null,card='',date='',merchant='';
-  const amtMatch=txt.match(/([\d,]+)원/); if(amtMatch) amount=parseInt(amtMatch[1].replace(/,/g,''));
-  const dateMatch=txt.match(/(\d{2})\/(\d{2})/);
-  if(dateMatch){const y=new Date().getFullYear();date=y+'-'+dateMatch[1].padStart(2,'0')+'-'+dateMatch[2].padStart(2,'0');}
-  const cards=['현대','롯데','삼성','신한','국민','하나','우리'];
-  for(const c of cards){if(txt.includes(c)){card=c;break;}}
-  const lines=txt.split('\n').map(l=>l.trim()).filter(Boolean);
-  for(const line of lines){
-    if(/\[Web발신\]/.test(line)||/승인|일시불|할부/.test(line)||/\d{2}\/\d{2}/.test(line)||/누적/.test(line)||/([\d,]+)원/.test(line)) continue;
-    if(cards.some(c=>line.startsWith(c))) continue;
-    const clean=line.replace(/주식회사\s*/,'').replace(/\(.*?\)/g,'').replace(/\s+pay.*/i,'').trim();
-    if(clean.length>=2&&clean.length<=30){merchant=clean;break;}
+  const parsed=txt.includes('현대카드')?parseHyundaiSms(txt):parseLotteSms(txt);
+  if(parsed.amount){
+    document.getElementById('amount').value=parsed.amount;
+    if(parsed.date) document.getElementById('date').value=parsed.date;
+    if(parsed.card) document.getElementById('payment').value=parsed.card;
+    if(parsed.merchant) document.getElementById('merchant').value=parsed.merchant;
+    const cancelBadge=parsed.status==='취소'?' <span style="color:#e55;font-weight:bold">· 취소</span>':'';
+    result.innerHTML=`<div class="parsed-badge">${esc(parsed.card)}카드 · ${parsed.amount.toLocaleString()}원 · ${esc(parsed.merchant)} · ${esc(parsed.date)}${cancelBadge} <button onclick="saveFromSms()" style="margin-left:8px;padding:3px 12px;border-radius:6px;background:#34c759;color:#fff;border:none;cursor:pointer;font-size:13px;font-weight:bold">바로 저장</button></div>`;
+  }else{
+    result.innerHTML='<div class="err">인식 실패 · 직접 입력해주세요</div>';
   }
-  if(amount){
-    document.getElementById('amount').value=amount;
-    if(date) document.getElementById('date').value=date;
-    if(card) document.getElementById('payment').value=card;
-    if(merchant) document.getElementById('merchant').value=merchant;
-    result.innerHTML='<div class="parsed-badge">인식완료 · '+amount.toLocaleString()+'원 '+esc(card)+' '+esc(date)+'</div>';
-  }else result.innerHTML='<div class="err">인식 실패 · 직접 입력해주세요</div>';
+}
+
+async function saveFromSms(){
+  await addItem();
+  document.getElementById('sms').value='';
+  document.getElementById('parsed-result').innerHTML='';
 }
 
 async function setBudget(){budget=parseInt(document.getElementById('budgetInput').value)||0;render();await saveBudget();}
