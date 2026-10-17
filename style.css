@@ -30,6 +30,7 @@ body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif
 .bar-fill{height:100%}
 .bu{background:#378add}
 .br{background:#1d9e75}
+.red-fill{background:#e24b4a}
 .bar-lbl,.bar-pct{font-size:11px;color:#777}
 .field-row{margin-bottom:7px}
 .field-row input,.field-row select,.budget-edit-box input,.month-nav input,.filter,.sms-box,button{border:1px solid #ddd;border-radius:8px;background:#f8f8f6;padding:8px;font:inherit}
