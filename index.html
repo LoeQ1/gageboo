@@ -64,15 +64,14 @@
     <div class="section" style="flex:1">
       <div class="section-title">직접 입력</div>
       <div class="field-row">
-        <select id="desc"><option value="식비">식비</option><option value="생활비">생활비</option></select>
         <select id="type" onchange="togglePayment()"><option value="out">지출</option><option value="inc">수입(환급)</option></select>
-      </div>
-      <div class="field-row" id="payment-row">
-        <select id="payment">
-          <option value="현대">현대</option><option value="롯데">롯데</option><option value="현금">현금</option>
-          <option value="삼성">삼성</option><option value="신한">신한</option><option value="국민">국민</option>
-          <option value="하나">하나</option><option value="우리">우리</option><option value="기타">기타</option>
-        </select>
+        <div id="payment-row" style="flex:1;display:flex">
+          <select id="payment" style="width:100%">
+            <option value="현대">현대</option><option value="롯데">롯데</option><option value="현금">현금</option>
+            <option value="삼성">삼성</option><option value="신한">신한</option><option value="국민">국민</option>
+            <option value="하나">하나</option><option value="우리">우리</option><option value="기타">기타</option>
+          </select>
+        </div>
       </div>
       <div class="field-row"><input type="text" id="merchant" placeholder="거래처 (예: 쿠팡)"></div>
       <div class="field-row"><input type="number" id="amount" placeholder="금액" oninput="clearErr()"><input type="date" id="date"></div>
@@ -85,7 +84,12 @@
     <div class="list-header">
       <span class="list-title">내역</span>
       <div class="list-head-right">
-        <select class="filter" id="filter" onchange="render()"><option value="all">전체</option><option value="식비">식비</option><option value="생활비">생활비</option></select>
+        <select class="filter" id="sortBy" onchange="render()">
+          <option value="date-desc">날짜 최신순</option>
+          <option value="date-asc">날짜 과거순</option>
+          <option value="amt-desc">금액 높은순</option>
+          <option value="amt-asc">금액 낮은순</option>
+        </select>
         <span class="list-count" id="list-count">0건</span>
       </div>
     </div>

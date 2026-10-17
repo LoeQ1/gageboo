@@ -133,7 +133,8 @@ async function setBudget(){
 }
 
 async function addItemWithStatus(customStatus){
-  const desc=document.getElementById('desc').value;
+  const descEl=document.getElementById('desc');
+  const desc=descEl?descEl.value:'지출';
   const amount=parseInt(document.getElementById('amount').value)||0;
   const type=document.getElementById('type').value;
   const date=document.getElementById('date').value;
@@ -199,8 +200,32 @@ function render(){
       barLbl.textContent='소진율';
     }
   }
-  const filter=document.getElementById('filter').value;const shown=filter==='all'?monthItems:monthItems.filter(i=>i.desc===filter);document.getElementById('list-count').textContent=shown.length+'건';const list=document.getElementById('list');if(!shown.length){list.innerHTML='<div class="empty">내역이 없습니다</div>';return;}
-  list.innerHTML=shown.map(i=>`<div class="item"><div class="item-left"><div class="item-desc">${esc(i.desc)} ${i.payment?'<span class="badge '+(i.payment==='현금'?'cash':'')+'">'+esc(i.payment)+'</span>':''} ${i.status==='취소'?'<span class="badge cancel">취소</span>':''}</div><div class="item-meta">${esc(i.date)}${i.time?' '+esc(i.time):''}${i.merchant?' · '+esc(i.merchant):''}</div></div><div class="item-right"><div class="item-amt ${Number(i.amount)<0?'green':(i.type==='out'?'red':'green')}">${i.type==='out'?(Number(i.amount)<0?'+':'-'):'+'}${fmt(Math.abs(Number(i.amount)))}원</div><button class="del-btn" onclick="delItem('${i.id}')">✕</button></div></div>`).join('');
+  const sortBy=document.getElementById('sortBy')?.value || 'date-desc';
+  let sortedItems=[...monthItems];
+  if(sortBy==='date-desc'){
+    sortedItems.sort((a,b)=>(b.date+(b.time||'')).localeCompare(a.date+(a.time||'')) || Number(b.amount)-Number(a.amount));
+  }else if(sortBy==='date-asc'){
+    sortedItems.sort((a,b)=>(a.date+(a.time||'')).localeCompare(b.date+(b.time||'')) || Number(a.amount)-Number(b.amount));
+  }else if(sortBy==='amt-desc'){
+    sortedItems.sort((a,b)=>Number(b.amount)-Number(a.amount) || (b.date).localeCompare(a.date));
+  }else if(sortBy==='amt-asc'){
+    sortedItems.sort((a,b)=>Number(a.amount)-Number(b.amount) || (b.date).localeCompare(a.date));
+  }
+
+  const listCount=document.getElementById('list-count');
+  if(listCount) listCount.textContent=sortedItems.length+'건';
+  const list=document.getElementById('list');
+  if(!sortedItems.length){list.innerHTML='<div class="empty">내역이 없습니다</div>';return;}
+  list.innerHTML=sortedItems.map(i=>`<div class="item">
+    <div class="item-left">
+      <div class="item-desc">${esc(i.merchant||'지출')} ${i.payment?'<span class="badge '+(i.payment==='현금'?'cash':'')+'">'+esc(i.payment)+'</span>':''} ${i.status==='취소'?'<span class="badge cancel">취소</span>':''}</div>
+      <div class="item-meta">${esc(i.date)}${i.time?' '+esc(i.time):''}</div>
+    </div>
+    <div class="item-right">
+      <div class="item-amt ${Number(i.amount)<0?'green':(i.type==='out'?'red':'green')}">${i.type==='out'?(Number(i.amount)<0?'+':'-'):'+'}${fmt(Math.abs(Number(i.amount)))}원</div>
+      <button class="del-btn" onclick="delItem('${i.id}')">✕</button>
+    </div>
+  </div>`).join('');
 }
 
 loadCloudData();
