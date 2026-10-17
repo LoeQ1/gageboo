@@ -32,7 +32,8 @@ async function loadCloudData(){
     render();
   }catch(e){
     console.error(e);
-    setCloudStatus('연결 실패','err');
+    const msg = e.message || String(e);
+    setCloudStatus('연결 실패 (' + msg.slice(0, 25) + ')', 'err');
     render();
   }
 }
