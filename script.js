@@ -187,13 +187,13 @@ function render(){
   if(barFill && barPct && barLbl){
     if(remain<0){
       barFill.style.width='100%';
-      barFill.className='bar-fill red-fill';
+      barFill.style.background='#e24b4a';
       barPct.textContent=usedPct+'% (초과)';
       barPct.style.color='#e24b4a';
       barLbl.textContent='초과';
     }else{
       barFill.style.width=Math.min(100,Math.max(0,usedPct))+'%';
-      barFill.className='bar-fill bu';
+      barFill.style.background='#378add';
       barPct.textContent=usedPct+'%';
       barPct.style.color='#777';
       barLbl.textContent='소진율';
