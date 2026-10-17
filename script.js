@@ -1,6 +1,6 @@
-const SUPABASE_URL='https://frqqjvsdkjzrsiuflcax.supabase.co';
-const SUPABASE_PUBLISHABLE_KEY='sb_publishable_lRSzfopmPO_kMWaT70WagA_YrEI_fjB';
-const db=window.supabase.createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
+const firebaseConfig={apiKey:"AIzaSyCB_2WaZlyMT4aS0zOyGvzxhkSYJQ5seJI",authDomain:"gageboo-ae9c8.firebaseapp.com",projectId:"gageboo-ae9c8",storageBucket:"gageboo-ae9c8.firebasestorage.app",messagingSenderId:"874609321369",appId:"1:874609321369:web:8c0b541b987fac7aa71f08"};
+firebase.initializeApp(firebaseConfig);
+const db=firebase.firestore();
 let budget=500000;
 let items=[];
 const today=new Date().toISOString().split('T')[0];
@@ -15,30 +15,33 @@ function setCloudStatus(text,kind='wait'){
 
 async function loadCloudData(){
   setCloudStatus('공용 데이터 불러오는 중…','wait');
-  const [{data:itemRows,error:itemError},{data:settingRows,error:settingError}]=await Promise.all([
-    db.from('household_items').select('*').order('date',{ascending:false}).order('time',{ascending:false}),
-    db.from('household_settings').select('*').eq('key','budget').limit(1)
-  ]);
-  if(itemError||settingError){
-    console.error(itemError||settingError);
-    setCloudStatus('Supabase 불러오기 실패','err');
+  try{
+    const [itemsSnap,settingSnap]=await Promise.all([
+      db.collection('household_items').orderBy('date','desc').get(),
+      db.collection('household_settings').doc('budget').get()
+    ]);
+    items=itemsSnap.docs.map(doc=>{
+      const r=doc.data();
+      return{id:doc.id,desc:r.category,amount:Number(r.amount),type:r.type||'out',date:r.date,payment:r.payment||'',merchant:r.merchant||'',time:r.time||'',status:r.status||''};
+    });
+    if(settingSnap.exists) budget=Number(settingSnap.data().value)||0;
+    document.getElementById('budgetInput').value=budget;
+    setCloudStatus('공용 데이터 연결됨','ok');
     render();
-    return;
+  }catch(e){
+    console.error(e);
+    setCloudStatus('Firestore 불러오기 실패','err');
+    render();
   }
-  items=(itemRows||[]).map(r=>({
-    id:r.id,desc:r.category,amount:Number(r.amount),type:r.type||'out',date:r.date,
-    payment:r.payment||'',merchant:r.merchant||'',time:r.time||'',status:r.status||''
-  }));
-  if(settingRows?.length) budget=Number(settingRows[0].value)||0;
-  document.getElementById('budgetInput').value=budget;
-  setCloudStatus('공용 데이터 연결됨','ok');
-  render();
 }
 
 async function saveBudget(){
-  const {error}=await db.from('household_settings').upsert({key:'budget',value:String(budget)},{onConflict:'key'});
-  if(error){console.error(error);setCloudStatus('예산 저장 실패','err');return false;}
-  setCloudStatus('예산 저장 완료','ok');return true;
+  try{
+    await db.collection('household_settings').doc('budget').set({value:String(budget)});
+    setCloudStatus('예산 저장 완료','ok');return true;
+  }catch(e){
+    console.error(e);setCloudStatus('예산 저장 실패','err');return false;
+  }
 }
 
 function clearErr(){document.getElementById('err').textContent='';}
@@ -82,17 +85,23 @@ async function addItem(){
   const merchant=document.getElementById('merchant').value.trim();
   if(!amount){document.getElementById('err').textContent='금액을 입력하세요';return;}
   const payment=type==='out'?document.getElementById('payment').value:'';
-  const {data,error}=await db.from('household_items').insert({category:desc,amount,type,date,payment,merchant,time:'',status:'수동입력'}).select().single();
-  if(error){console.error(error);document.getElementById('err').textContent='저장에 실패했습니다';setCloudStatus('내역 저장 실패','err');return;}
-  items.unshift({id:data.id,desc:data.category,amount:Number(data.amount),type:data.type,date:data.date,payment:data.payment||'',merchant:data.merchant||'',time:data.time||'',status:data.status||''});
-  document.getElementById('amount').value='';document.getElementById('merchant').value='';document.getElementById('sms').value='';document.getElementById('parsed-result').innerHTML='';clearErr();setCloudStatus('내역 저장 완료','ok');render();
+  try{
+    const docRef=await db.collection('household_items').add({category:desc,amount,type,date,payment,merchant,time:'',status:'수동입력'});
+    items.unshift({id:docRef.id,desc,amount,type,date,payment,merchant,time:'',status:'수동입력'});
+    document.getElementById('amount').value='';document.getElementById('merchant').value='';document.getElementById('sms').value='';document.getElementById('parsed-result').innerHTML='';clearErr();setCloudStatus('내역 저장 완료','ok');render();
+  }catch(e){
+    console.error(e);document.getElementById('err').textContent='저장에 실패했습니다';setCloudStatus('내역 저장 실패','err');
+  }
 }
 
 async function delItem(id){
   if(!confirm('이 내역을 삭제할까요?')) return;
-  const {error}=await db.from('household_items').delete().eq('id',id);
-  if(error){console.error(error);setCloudStatus('삭제 실패','err');return;}
-  items=items.filter(i=>String(i.id)!==String(id));setCloudStatus('삭제 완료','ok');render();
+  try{
+    await db.collection('household_items').doc(String(id)).delete();
+    items=items.filter(i=>String(i.id)!==String(id));setCloudStatus('삭제 완료','ok');render();
+  }catch(e){
+    console.error(e);setCloudStatus('삭제 실패','err');
+  }
 }
 
 function paymentName(raw){raw=String(raw||'');for(const c of ['현대','롯데','삼성','신한','국민','하나','우리']) if(raw.includes(c)) return c;if(raw.includes('현금')) return '현금';return '기타';}
@@ -118,7 +127,11 @@ function importCsv(event){
       const exists=items.some(i=>[i.date,i.time||'',i.merchant,i.amount,i.status||'',i.desc].join('|')===key);if(exists){skipped++;continue;}
       pending.push({category,amount,type:'out',date,payment,merchant,time:time==='-'?'':time,status});added++;
     }
-    if(pending.length){const {error}=await db.from('household_items').insert(pending);if(error){console.error(error);document.getElementById('import-msg').textContent='CSV 저장 실패';return;}}
+    if(pending.length){
+      const batch=db.batch();
+      pending.forEach(item=>{const ref=db.collection('household_items').doc();batch.set(ref,item);});
+      try{await batch.commit();}catch(e){console.error(e);document.getElementById('import-msg').textContent='CSV 저장 실패';return;}
+    }
     await loadCloudData();document.getElementById('import-msg').textContent=`${added}건 추가 · ${skipped}건 중복/건너뜀`;event.target.value='';
   };
   reader.readAsText(file,'UTF-8');
