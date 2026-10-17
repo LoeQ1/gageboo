@@ -1,21 +1,23 @@
 :root {
-  --primary: #3b82f6;
-  --primary-hover: #2563eb;
-  --primary-light: #eff6ff;
-  --success: #10b981;
-  --success-light: #ecfdf5;
-  --danger: #ef4444;
-  --danger-light: #fef2f2;
-  --bg: #f8fafc;
+  /* Warm & Natural Palette */
+  --primary: #4a6741;          /* 딥 올리브 카키 */
+  --primary-hover: #3b5334;
+  --primary-light: #f2f6f0;
+  --success: #3b7046;          /* 자연스러운 세이지 그린 */
+  --success-light: #eef5ef;
+  --danger: #b94a48;           /* 톤다운된 테라코타 레드 */
+  --danger-light: #fdf2f2;
+  --bg: #f9f8f6;               /* 따뜻한 리넨/미색 배경 */
   --card-bg: #ffffff;
-  --text-main: #0f172a;
-  --text-muted: #64748b;
-  --border: #e2e8f0;
+  --text-main: #2d2a26;        /* 차분한 차콜 브라운 */
+  --text-muted: #7d7871;       /* 웜 그레이 */
+  --border: #e8e5df;          /* 부드러운 오트밀 베이지 테두리 */
+  --input-bg: #faf9f7;
   --radius-lg: 16px;
   --radius-md: 12px;
   --radius-sm: 8px;
-  --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-  --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.07), 0 2px 4px -2px rgb(0 0 0 / 0.07);
+  --shadow-sm: 0 1px 3px rgba(45, 42, 38, 0.04);
+  --shadow: 0 4px 10px rgba(45, 42, 38, 0.06);
 }
 
 * { box-sizing: border-box; }
@@ -50,7 +52,7 @@ body {
 
 .app-title {
   padding: 20px 20px 16px;
-  background: linear-gradient(180deg, #ffffff 0%, #fafbfc 100%);
+  background: #ffffff;
   border-bottom: 1px solid var(--border);
 }
 
@@ -119,8 +121,8 @@ body {
 }
 
 .budget-toggle-btn {
-  background: #f1f5f9;
-  border: 1px solid #e2e8f0;
+  background: #f4f2ee;
+  border: 1px solid var(--border);
   font-size: 11px;
   color: var(--primary);
   font-weight: 600;
@@ -147,8 +149,8 @@ body {
 }
 
 .stat {
-  background: #f8fafc;
-  border: 1px solid #edf2f7;
+  background: #fbfaf8;
+  border: 1px solid var(--border);
   border-radius: var(--radius-md);
   padding: 12px 10px;
   transition: transform 0.15s ease;
@@ -188,7 +190,7 @@ body {
 .bar-bg {
   flex: 1;
   height: 10px;
-  background: #e2e8f0;
+  background: #edeae4;
   border-radius: 6px;
   overflow: hidden;
 }
@@ -199,8 +201,8 @@ body {
   transition: width 0.3s ease;
 }
 
-.bu { background: linear-gradient(90deg, #3b82f6 0%, #60a5fa 100%); }
-.red-fill { background: linear-gradient(90deg, #ef4444 0%, #f87171 100%); }
+.bu { background: linear-gradient(90deg, #4a6741 0%, #6b8f60 100%); }
+.red-fill { background: linear-gradient(90deg, #b94a48 0%, #d96d6b 100%); }
 
 .bar-pct {
   font-size: 12px;
@@ -219,7 +221,7 @@ body {
 .field-row input, .field-row select, .budget-edit-box input, .month-nav input, .filter, .sms-box, button {
   border: 1px solid var(--border);
   border-radius: var(--radius-md);
-  background: #ffffff;
+  background: var(--input-bg);
   padding: 10px 12px;
   font: inherit;
   font-size: 13px;
@@ -230,7 +232,7 @@ body {
 
 .field-row input:focus, .field-row select:focus, .budget-edit-box input:focus, .month-nav input:focus, .filter:focus, .sms-box:focus {
   border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+  box-shadow: 0 0 0 3px rgba(74, 103, 65, 0.15);
 }
 
 .field-row input, .field-row select, .budget-edit-box input, .month-nav input {
@@ -239,25 +241,25 @@ body {
 }
 
 .month-nav button {
-  background: #f8fafc;
+  background: #f4f2ee;
   cursor: pointer;
   padding: 8px 14px;
   font-weight: bold;
 }
 .month-nav button:hover {
-  background: #f1f5f9;
+  background: #eae7e1;
 }
 
 .month-all {
   margin-top: 4px;
   width: 100%;
-  background: #f8fafc;
+  background: #f4f2ee;
   cursor: pointer;
   font-weight: 600;
   color: var(--text-muted);
 }
 .month-all:hover {
-  background: #f1f5f9;
+  background: #eae7e1;
   color: var(--text-main);
 }
 
@@ -265,7 +267,7 @@ body {
   width: 100%;
   height: 72px;
   resize: none;
-  background: #fafbfc;
+  background: var(--input-bg);
   line-height: 1.4;
 }
 
@@ -278,11 +280,11 @@ body {
 .parsed-badge {
   margin-top: 10px;
   padding: 10px 12px;
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
+  background: #f4f7f2;
+  border: 1px solid #d4dfd0;
   border-radius: var(--radius-md);
   font-size: 13px;
-  color: #166534;
+  color: #2e4b25;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -301,7 +303,7 @@ body {
   cursor: pointer;
   border-radius: var(--radius-md);
   margin-top: 4px;
-  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.25);
+  box-shadow: 0 2px 4px rgba(74, 103, 65, 0.25);
   transition: all 0.15s ease;
 }
 .add-btn:hover {
@@ -320,7 +322,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(249, 248, 246, 0.88);
   backdrop-filter: blur(8px);
   position: sticky;
   top: 0;
@@ -370,7 +372,7 @@ body {
 }
 .item:hover {
   box-shadow: var(--shadow);
-  border-color: #cbd5e1;
+  border-color: #d6d1c7;
 }
 
 .item-left {
@@ -410,9 +412,9 @@ body {
 }
 
 .del-btn {
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  color: #94a3b8;
+  background: #fbfaf8;
+  border: 1px solid var(--border);
+  color: #a8a29e;
   cursor: pointer;
   font-size: 12px;
   width: 26px;
@@ -435,10 +437,10 @@ body {
   font-weight: 600;
   padding: 2px 7px;
   border-radius: 6px;
-  background: #f1f5f9;
-  color: #475569;
+  background: #f2eee8;
+  color: #5c554b;
 }
-.badge.cash { background: #fef9c3; color: #854d0e; }
+.badge.cash { background: #fbf4da; color: #785a12; }
 .badge.cancel { background: var(--danger-light); color: var(--danger); }
 
 .empty {

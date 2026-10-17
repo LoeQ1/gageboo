@@ -189,15 +189,15 @@ function render(){
   if(barFill && barPct && barLbl){
     if(remain<0){
       barFill.style.width='100%';
-      barFill.style.background='#e24b4a';
+      barFill.style.background='linear-gradient(90deg, #b94a48 0%, #d96d6b 100%)';
       barPct.textContent=usedPct+'% (초과)';
-      barPct.style.color='#e24b4a';
+      barPct.style.color='#b94a48';
       barLbl.textContent='초과';
     }else{
       barFill.style.width=Math.min(100,Math.max(0,usedPct))+'%';
-      barFill.style.background='#378add';
+      barFill.style.background='linear-gradient(90deg, #4a6741 0%, #6b8f60 100%)';
       barPct.textContent=usedPct+'%';
-      barPct.style.color='#777';
+      barPct.style.color='#7d7871';
       barLbl.textContent='소진율';
     }
   }
