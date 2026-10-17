@@ -2,102 +2,206 @@
 <html lang="ko">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>가계부 · 식비 & 생활비</title>
-<link rel="stylesheet" href="style.css?v=20261017-7">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<title>가계부</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css">
+<link rel="stylesheet" href="style.css?v=20261017-app-1">
 </head>
 <body>
-<div class="wrap">
-  <div class="left">
-    <div class="app-title">
-      <div class="title-row">
-        <span>가계부 · 식비 & 생활비</span>
-        <div class="cloud-status wait" id="cloud-status">연결 준비 중…</div>
-      </div>
-      <div class="app-sub">가족 실시간 공용 가계부</div>
+
+<div class="app-container">
+  <!-- 상단 네비게이션 헤더 -->
+  <header class="app-header">
+    <div class="header-left">
+      <span class="app-logo">가계부</span>
+      <div class="cloud-status wait" id="cloud-status" onclick="loadCloudData(true)">연결 중</div>
     </div>
-
-    <!-- 월별 보기 -->
-    <div class="section">
-      <div class="section-title">조회 기간</div>
-      <div class="month-nav">
-        <button type="button" onclick="moveMonth(-1)" aria-label="이전 달">‹</button>
-        <input type="month" id="monthFilter" onchange="render()">
-        <button type="button" onclick="moveMonth(1)" aria-label="다음 달">›</button>
-      </div>
-      <button class="tool month-all" type="button" onclick="showAllMonths()">전체 기간 보기</button>
+    <div class="month-selector">
+      <button type="button" class="month-arrow" onclick="moveMonth(-1)" aria-label="이전 달">‹</button>
+      <span id="currentMonthText" class="month-display" onclick="openMonthPicker()">2026년 10월</span>
+      <button type="button" class="month-arrow" onclick="moveMonth(1)" aria-label="다음 달">›</button>
+      <input type="month" id="monthFilter" class="hidden-month-input" onchange="onMonthInputChange()">
     </div>
+  </header>
 
-    <!-- 지출 요약 & 예산 설정 -->
-    <div class="section">
-      <div class="summary-header">
-        <div class="section-title" style="margin-bottom:0">요약</div>
-        <button class="budget-toggle-btn" type="button" onclick="toggleBudgetEdit()">예산 변경</button>
-      </div>
-      
-      <div id="budget-edit-box" class="budget-edit-box" style="display:none">
-        <input type="number" id="budgetInput" value="500000" placeholder="목표 예산(원)">
-        <button class="tool" onclick="setBudget()">저장</button>
+  <main class="app-main">
+    <!-- 토스 스타일 메인 머니 대시보드 카드 -->
+    <section class="money-card">
+      <div class="card-header">
+        <span class="card-subtitle">남은 예산</span>
+        <button class="icon-btn edit-budget-btn" onclick="openBudgetModal()" title="예산 설정">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+        </button>
       </div>
 
-      <div class="stats">
-        <div class="stat"><div class="stat-label">예산</div><div class="stat-value blue" id="s-budget">500,000</div></div>
-        <div class="stat"><div class="stat-label">사용액</div><div class="stat-value red" id="s-used">0</div></div>
-        <div class="stat"><div class="stat-label">잔액</div><div class="stat-value green" id="s-remain">500,000</div></div>
+      <div class="main-amount-row">
+        <span class="main-remain-amount" id="s-remain">0원</span>
       </div>
-      <div class="bar-row" style="margin-top:12px">
-        <div class="bar-lbl" id="bar-status-lbl">소진율</div>
-        <div class="bar-bg"><div class="bar-fill bu" id="bar-fill" style="width:0%"></div></div>
-        <div class="bar-pct" id="bar-pct">0%</div>
-      </div>
-    </div>
 
-    <!-- 문자 인식 -->
-    <div class="section">
-      <div class="section-title">문자 붙여넣기 (현대 / 롯데)</div>
-      <textarea class="sms-box" id="sms" placeholder="카드 승인 문자를 붙여넣으면 즉시 인식합니다" oninput="parseSms()"></textarea>
-      <div class="sms-hint">롯데 / 현대카드 승인 및 취소 문자 자동 파싱</div>
-      <div id="parsed-result"></div>
-    </div>
-
-    <!-- 직접 내역 입력 -->
-    <div class="section" style="flex:1">
-      <div class="section-title">직접 입력</div>
-      <div class="field-row">
-        <select id="type" onchange="togglePayment()"><option value="out">지출</option><option value="inc">수입(환급)</option></select>
-        <div id="payment-row" style="flex:1;display:flex">
-          <select id="payment" style="width:100%">
-            <option value="현대">현대</option><option value="롯데">롯데</option><option value="현금">현금</option>
-            <option value="삼성">삼성</option><option value="신한">신한</option><option value="국민">국민</option>
-            <option value="하나">하나</option><option value="우리">우리</option><option value="기타">기타</option>
-          </select>
+      <!-- 감각적인 프로그레스 바 -->
+      <div class="gauge-container">
+        <div class="gauge-bar-bg">
+          <div class="gauge-bar-fill" id="bar-fill" style="width:0%"></div>
+        </div>
+        <div class="gauge-meta">
+          <span id="bar-status-lbl">지출 0원</span>
+          <span id="bar-pct">0% 소진</span>
         </div>
       </div>
-      <div class="field-row"><input type="text" id="merchant" placeholder="거래처 (예: 쿠팡)"></div>
-      <div class="field-row"><input type="number" id="amount" placeholder="금액" oninput="clearErr()"><input type="date" id="date"></div>
-      <div class="err" id="err"></div>
-      <button class="add-btn" onclick="addItem()">내역 추가</button>
-    </div>
-  </div>
 
-  <div class="right">
-    <div class="list-header">
-      <span class="list-title">내역</span>
-      <div class="list-head-right">
-        <select class="filter" id="sortBy" onchange="render()">
-          <option value="date-desc">날짜 최신순</option>
-          <option value="date-asc">날짜 과거순</option>
-          <option value="amt-desc">금액 높은순</option>
-          <option value="amt-asc">금액 낮은순</option>
-        </select>
-        <span class="list-count" id="list-count">0건</span>
+      <div class="budget-sub-stats">
+        <div class="sub-stat-item">
+          <span class="sub-stat-label">총 예산</span>
+          <span class="sub-stat-val" id="s-budget">500,000원</span>
+        </div>
+        <div class="sub-divider"></div>
+        <div class="sub-stat-item">
+          <span class="sub-stat-label">총 사용</span>
+          <span class="sub-stat-val" id="s-used">0원</span>
+        </div>
+      </div>
+    </section>
+
+    <!-- 원터치 퀵 액션 카드 (카드 문자 붙여넣기 전용) -->
+    <section class="quick-action-section">
+      <button class="quick-sms-banner" onclick="openSmsModal()">
+        <div class="sms-banner-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+        </div>
+        <div class="sms-banner-text">
+          <strong>카드 승인 문자 빠른 입력</strong>
+          <span>현대 / 롯데카드 문자를 붙여넣으면 즉시 등록</span>
+        </div>
+        <span class="sms-banner-arrow">›</span>
+      </button>
+    </section>
+
+    <!-- 타임라인 내역 피드 섹션 -->
+    <section class="timeline-section">
+      <div class="timeline-header">
+        <span class="timeline-title">지출 타임라인</span>
+        <div class="timeline-controls">
+          <select id="sortBy" class="clean-select" onchange="render()">
+            <option value="date-desc">최신순</option>
+            <option value="date-asc">과거순</option>
+            <option value="amt-desc">금액 높은순</option>
+            <option value="amt-asc">금액 낮은순</option>
+          </select>
+          <span class="feed-count-badge" id="list-count">0건</span>
+        </div>
+      </div>
+
+      <div id="timeline-list" class="timeline-list">
+        <!-- 렌더링 영역 -->
+      </div>
+    </section>
+  </main>
+
+  <!-- 플로팅 직접 등록 버튼 (+) -->
+  <button class="fab-add-btn" onclick="openDirectAddModal()" aria-label="직접 내역 추가">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+  </button>
+</div>
+
+<!-- ================= 모달 1: 카드 문자 빠른 입력 바텀시트 ================= -->
+<div class="modal-backdrop" id="smsModal" onclick="closeModalOnBackdrop(event, 'smsModal')">
+  <div class="bottom-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <h3>카드 승인 문자 입력</h3>
+      <button class="sheet-close" onclick="closeModal('smsModal')">✕</button>
+    </div>
+    <div class="sheet-body">
+      <textarea id="sms" class="sms-textarea" placeholder="카카오톡이나 문자로 받은 카드 승인/취소 내역을 여기에 붙여넣으세요" oninput="parseSms()"></textarea>
+      
+      <div id="parsed-result" class="parsed-preview-box"></div>
+
+      <div class="sheet-guide">
+        <span>💡 지원 카드: <strong>현대카드</strong>, <strong>롯데카드</strong> (취소 내역 자동 감지)</span>
       </div>
     </div>
-    <div id="list"></div>
   </div>
 </div>
+
+<!-- ================= 모달 2: 직접 내역 추가 바텀시트 ================= -->
+<div class="modal-backdrop" id="addModal" onclick="closeModalOnBackdrop(event, 'addModal')">
+  <div class="bottom-sheet">
+    <div class="sheet-handle"></div>
+    <div class="sheet-header">
+      <h3>직접 내역 입력</h3>
+      <button class="sheet-close" onclick="closeModal('addModal')">✕</button>
+    </div>
+    <div class="sheet-body form-grid">
+      <div class="form-group type-selector">
+        <label class="radio-label">
+          <input type="radio" name="modalType" value="out" checked onchange="toggleModalPayment()">
+          <span>지출</span>
+        </label>
+        <label class="radio-label">
+          <input type="radio" name="modalType" value="inc" onchange="toggleModalPayment()">
+          <span>수입(환급)</span>
+        </label>
+      </div>
+
+      <div class="form-group" id="modalPaymentGroup">
+        <label class="input-label">결제 수단</label>
+        <select id="modalPayment" class="form-input">
+          <option value="현대">현대카드</option>
+          <option value="롯데">롯데카드</option>
+          <option value="현금">현금</option>
+          <option value="삼성">삼성카드</option>
+          <option value="신한">신한카드</option>
+          <option value="국민">국민카드</option>
+          <option value="하나">하나카드</option>
+          <option value="우리">우리카드</option>
+          <option value="기타">기타</option>
+        </select>
+      </div>
+
+      <div class="form-group">
+        <label class="input-label">결제처 (내용)</label>
+        <input type="text" id="modalMerchant" class="form-input" placeholder="예: 쿠팡, 이모네떡볶이">
+      </div>
+
+      <div class="form-row-2">
+        <div class="form-group">
+          <label class="input-label">금액</label>
+          <input type="number" id="modalAmount" class="form-input" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label class="input-label">날짜</label>
+          <input type="date" id="modalDate" class="form-input">
+        </div>
+      </div>
+
+      <div class="form-err" id="modalErr"></div>
+
+      <button type="button" class="btn-primary" onclick="submitDirectAdd()">저장하기</button>
+    </div>
+  </div>
+</div>
+
+<!-- ================= 모달 3: 예산 설정 팝업 ================= -->
+<div class="modal-backdrop" id="budgetModal" onclick="closeModalOnBackdrop(event, 'budgetModal')">
+  <div class="center-dialog">
+    <div class="dialog-header">
+      <h3>월 목표 예산 설정</h3>
+      <button class="sheet-close" onclick="closeModal('budgetModal')">✕</button>
+    </div>
+    <div class="dialog-body">
+      <p class="dialog-desc">한 달 동안 사용할 공용 목표 예산을 입력하세요.</p>
+      <div class="input-with-won">
+        <input type="number" id="budgetInput" class="form-input large-input" placeholder="500000">
+        <span class="won-unit">원</span>
+      </div>
+      <button type="button" class="btn-primary" onclick="submitBudget()">예산 변경 완료</button>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase SDK -->
 <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.0/firebase-firestore-compat.js"></script>
-<script src="script.js?v=20261017-8"></script>
+<script src="script.js?v=20261017-app-1"></script>
 </body>
 </html>
