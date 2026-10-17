@@ -1,6 +1,14 @@
 const firebaseConfig={apiKey:"AIzaSyCB_2WaZlyMT4aS0zOyGvzxhkSYJQ5seJI",authDomain:"gageboo-ae9c8.firebaseapp.com",projectId:"gageboo-ae9c8",storageBucket:"gageboo-ae9c8.firebasestorage.app",messagingSenderId:"874609321369",appId:"1:874609321369:web:8c0b541b987fac7aa71f08"};
 firebase.initializeApp(firebaseConfig);
 const db=firebase.firestore();
+
+// 모바일 브라우저 오프라인/재연결 대응
+try {
+  db.enablePersistence({synchronizeTabs: true}).catch(err => {
+    console.warn('Persistence error:', err.code);
+  });
+} catch(e) {}
+
 let budget=500000;
 let items=[];
 const today=new Date().toISOString().split('T')[0];
@@ -14,8 +22,9 @@ function setCloudStatus(text,kind='wait'){
   el.className='cloud-status '+kind;
 }
 
-async function loadCloudData(){
-  setCloudStatus('연결 중…','wait');
+let retryTimer = null;
+async function loadCloudData(isRetry = false){
+  if(!isRetry) setCloudStatus('연결 중…','wait');
   try{
     const [itemsSnap,settingSnap]=await Promise.all([
       db.collection('household_items').orderBy('date','desc').get(),
@@ -33,10 +42,23 @@ async function loadCloudData(){
   }catch(e){
     console.error(e);
     const msg = e.message || String(e);
-    setCloudStatus('연결 실패 (' + msg.slice(0, 25) + ')', 'err');
+    // 오프라인이나 일시적 연결 지연일 경우 2초 뒤 자동 재시도
+    if(!isRetry && (msg.includes('offline') || msg.includes('network') || msg.includes('Failed to get'))){
+      setCloudStatus('재연결 중…', 'wait');
+      if(retryTimer) clearTimeout(retryTimer);
+      retryTimer = setTimeout(() => loadCloudData(true), 2000);
+    } else {
+      setCloudStatus('연결 실패 (' + msg.slice(0, 20) + ')', 'err');
+    }
     render();
   }
 }
+
+// 화면 포커스/네트워크 복구 시 자동 새로고침
+window.addEventListener('online', () => loadCloudData());
+document.addEventListener('visibilitychange', () => {
+  if (document.visibilityState === 'visible') loadCloudData(true);
+});
 
 function toggleBudgetEdit(){
   const box=document.getElementById('budget-edit-box');
