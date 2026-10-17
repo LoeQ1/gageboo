@@ -9,12 +9,13 @@ document.getElementById('monthFilter').value=today.slice(0,7);
 
 function setCloudStatus(text,kind='wait'){
   const el=document.getElementById('cloud-status');
+  if(!el) return;
   el.textContent=text;
   el.className='cloud-status '+kind;
 }
 
 async function loadCloudData(){
-  setCloudStatus('공용 데이터 불러오는 중…','wait');
+  setCloudStatus('연결 중…','wait');
   try{
     const [itemsSnap,settingSnap]=await Promise.all([
       db.collection('household_items').orderBy('date','desc').get(),
@@ -25,20 +26,27 @@ async function loadCloudData(){
       return{id:doc.id,desc:r.category,amount:Number(r.amount),type:r.type||'out',date:r.date,payment:r.payment||'',merchant:r.merchant||'',time:r.time||'',status:r.status||''};
     });
     if(settingSnap.exists) budget=Number(settingSnap.data().value)||0;
-    document.getElementById('budgetInput').value=budget;
-    setCloudStatus('공용 데이터 연결됨','ok');
+    const bIn=document.getElementById('budgetInput');
+    if(bIn) bIn.value=budget;
+    setCloudStatus('연결됨','ok');
     render();
   }catch(e){
     console.error(e);
-    setCloudStatus('Firestore 불러오기 실패','err');
+    setCloudStatus('연결 실패','err');
     render();
   }
+}
+
+function toggleBudgetEdit(){
+  const box=document.getElementById('budget-edit-box');
+  if(!box) return;
+  box.style.display=box.style.display==='none'?'flex':'none';
 }
 
 async function saveBudget(){
   try{
     await db.collection('household_settings').doc('budget').set({value:String(budget)});
-    setCloudStatus('예산 저장 완료','ok');return true;
+    setCloudStatus('예산 저장됨','ok');return true;
   }catch(e){
     console.error(e);setCloudStatus('예산 저장 실패','err');return false;
   }
@@ -49,7 +57,7 @@ function togglePayment(){document.getElementById('payment-row').style.display=do
 function fmt(n){return Math.round(n).toLocaleString();}
 function esc(v){return String(v??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));}
 
-function cleanMerchant(s){return s.replace(/주식회사\s*/g,'').replace(/\s*\(.*?\)/g,'').replace(/\s*(Inc\.|Co\.,?Ltd\.?)\s*/gi,'').trim();}
+function cleanMerchant(s){return s.replace(/주식회사\s*/g,'').replace(/\(.*?\)/g,'').replace(/(Inc\.|Co\.,?Ltd\.)/gi,'').trim();}
 
 function parseLotteSms(txt){
   const lines=txt.split('\n').map(l=>l.trim()).filter(Boolean);
@@ -95,22 +103,36 @@ function parseSms(){
     if(parsed.date) document.getElementById('date').value=parsed.date;
     if(parsed.card) document.getElementById('payment').value=parsed.card;
     if(parsed.merchant) document.getElementById('merchant').value=parsed.merchant;
-    const cancelBadge=parsed.status==='취소'?' <span style="color:#e55;font-weight:bold">· 취소</span>':'';
-    result.innerHTML=`<div class="parsed-badge">${esc(parsed.card)}카드 · ${parsed.amount.toLocaleString()}원 · ${esc(parsed.merchant)} · ${esc(parsed.date)}${cancelBadge} <button onclick="saveFromSms()" style="margin-left:8px;padding:3px 12px;border-radius:6px;background:#34c759;color:#fff;border:none;cursor:pointer;font-size:13px;font-weight:bold">바로 저장</button></div>`;
+    const isCancel=parsed.status==='취소';
+    if(isCancel){
+      document.getElementById('type').value='inc';
+      togglePayment();
+    }else{
+      document.getElementById('type').value='out';
+      togglePayment();
+    }
+    const cancelBadge=isCancel?' <span style="color:#e24b4a;font-weight:bold">· 취소(환급)</span>':'';
+    result.innerHTML=`<div class="parsed-badge">${esc(parsed.card)}카드 · ${parsed.amount.toLocaleString()}원 · ${esc(parsed.merchant)} · ${esc(parsed.date)}${cancelBadge} <button onclick="saveFromSms('${parsed.status}')" style="margin-left:8px;padding:4px 12px;border-radius:6px;background:#1d9e75;color:#fff;border:none;cursor:pointer;font-size:12px;font-weight:600">바로 저장</button></div>`;
   }else{
-    result.innerHTML='<div class="err">인식 실패 · 직접 입력해주세요</div>';
+    result.innerHTML='<div class="err">인식 실패 · 형식을 확인하거나 직접 입력해주세요</div>';
   }
 }
 
-async function saveFromSms(){
-  await addItem();
+async function saveFromSms(status='수동입력'){
+  await addItemWithStatus(status);
   document.getElementById('sms').value='';
   document.getElementById('parsed-result').innerHTML='';
 }
 
-async function setBudget(){budget=parseInt(document.getElementById('budgetInput').value)||0;render();await saveBudget();}
+async function setBudget(){
+  const bIn=document.getElementById('budgetInput');
+  budget=parseInt(bIn.value)||0;
+  toggleBudgetEdit();
+  render();
+  await saveBudget();
+}
 
-async function addItem(){
+async function addItemWithStatus(customStatus){
   const desc=document.getElementById('desc').value;
   const amount=parseInt(document.getElementById('amount').value)||0;
   const type=document.getElementById('type').value;
@@ -118,62 +140,28 @@ async function addItem(){
   const merchant=document.getElementById('merchant').value.trim();
   if(!amount){document.getElementById('err').textContent='금액을 입력하세요';return;}
   const payment=type==='out'?document.getElementById('payment').value:'';
+  const status=customStatus||(type==='inc'?'취소':'수동입력');
   try{
-    const docRef=await db.collection('household_items').add({category:desc,amount,type,date,payment,merchant,time:'',status:'수동입력'});
-    items.unshift({id:docRef.id,desc,amount,type,date,payment,merchant,time:'',status:'수동입력'});
-    document.getElementById('amount').value='';document.getElementById('merchant').value='';document.getElementById('sms').value='';document.getElementById('parsed-result').innerHTML='';clearErr();setCloudStatus('내역 저장 완료','ok');render();
+    const docRef=await db.collection('household_items').add({category:desc,amount,type,date,payment,merchant,time:'',status});
+    items.unshift({id:docRef.id,desc,amount,type,date,payment,merchant,time:'',status});
+    document.getElementById('amount').value='';document.getElementById('merchant').value='';clearErr();setCloudStatus('저장됨','ok');render();
   }catch(e){
-    console.error(e);document.getElementById('err').textContent='저장에 실패했습니다';setCloudStatus('내역 저장 실패','err');
+    console.error(e);document.getElementById('err').textContent='저장에 실패했습니다';setCloudStatus('저장 실패','err');
   }
+}
+
+async function addItem(){
+  await addItemWithStatus();
 }
 
 async function delItem(id){
   if(!confirm('이 내역을 삭제할까요?')) return;
   try{
     await db.collection('household_items').doc(String(id)).delete();
-    items=items.filter(i=>String(i.id)!==String(id));setCloudStatus('삭제 완료','ok');render();
+    items=items.filter(i=>String(i.id)!==String(id));setCloudStatus('삭제됨','ok');render();
   }catch(e){
     console.error(e);setCloudStatus('삭제 실패','err');
   }
-}
-
-function paymentName(raw){raw=String(raw||'');for(const c of ['현대','롯데','삼성','신한','국민','하나','우리']) if(raw.includes(c)) return c;if(raw.includes('현금')) return '현금';return '기타';}
-function parseCsvText(text){const rows=[];let row=[],field='',quoted=false;for(let i=0;i<text.length;i++){const ch=text[i];if(ch==='"'){if(quoted&&text[i+1]==='"'){field+='"';i++;}else quoted=!quoted;}else if(ch===','&&!quoted){row.push(field);field='';}else if((ch==='\n'||ch==='\r')&&!quoted){if(ch==='\r'&&text[i+1]==='\n')i++;row.push(field);field='';if(row.some(v=>v!==''))rows.push(row);row=[];}else field+=ch;}if(field||row.length){row.push(field);rows.push(row);}return rows;}
-
-function importCsv(event){
-  const file=event.target.files[0];if(!file)return;
-  const reader=new FileReader();
-  reader.onload=async e=>{
-    const rows=parseCsvText(String(e.target.result||'').replace(/^\uFEFF/,''));
-    if(rows.length<2){document.getElementById('import-msg').textContent='CSV에 데이터가 없어요.';return;}
-    const headers=rows[0].map(h=>h.trim());
-    const need=['날짜','결제처','금액(원)','상태','결제수단','분류'];
-    if(!need.every(n=>headers.includes(n))){document.getElementById('import-msg').textContent='필요한 열 이름을 찾지 못했어요.';return;}
-    const ix=Object.fromEntries(headers.map((h,i)=>[h,i]));let added=0,skipped=0;const pending=[];
-    for(let r=1;r<rows.length;r++){
-      const row=rows[r],category=(row[ix['분류']]||'').trim();if(!['식비','생활비'].includes(category))continue;
-      const rawDate=(row[ix['날짜']]||'').trim(),m=rawDate.match(/^(\d{1,2})\/(\d{1,2})$/);if(!m){skipped++;continue;}
-      const year=new Date().getFullYear(),date=year+'-'+m[1].padStart(2,'0')+'-'+m[2].padStart(2,'0');
-      const amount=parseInt(String(row[ix['금액(원)']]||'0').replace(/,/g,'').replace(/[^\d-]/g,''))||0;
-      const merchant=(row[ix['결제처']]||'').trim(),status=(row[ix['상태']]||'').trim(),time=ix['시간']!==undefined?(row[ix['시간']]||'').trim():'';
-      const payment=paymentName(row[ix['결제수단']]);const key=[date,time,merchant,amount,status,category].join('|');
-      const exists=items.some(i=>[i.date,i.time||'',i.merchant,i.amount,i.status||'',i.desc].join('|')===key);if(exists){skipped++;continue;}
-      pending.push({category,amount,type:'out',date,payment,merchant,time:time==='-'?'':time,status});added++;
-    }
-    if(pending.length){
-      const batch=db.batch();
-      pending.forEach(item=>{const ref=db.collection('household_items').doc();batch.set(ref,item);});
-      try{await batch.commit();}catch(e){console.error(e);document.getElementById('import-msg').textContent='CSV 저장 실패';return;}
-    }
-    await loadCloudData();document.getElementById('import-msg').textContent=`${added}건 추가 · ${skipped}건 중복/건너뜀`;event.target.value='';
-  };
-  reader.readAsText(file,'UTF-8');
-}
-
-function exportCsv(){
-  const headers=['날짜','시간','결제처','금액(원)','상태','결제수단','분류'];const q=v=>'"'+String(v??'').replace(/"/g,'""')+'"';const lines=[headers.join(',')];
-  [...items].sort((a,b)=>(a.date+(a.time||'')).localeCompare(b.date+(b.time||''))).forEach(i=>{const md=i.date?i.date.slice(5).replace('-','/'):'';lines.push([md,i.time||'',i.merchant,i.amount,i.status||'',i.payment,i.desc].map(q).join(','));});
-  const blob=new Blob(['\uFEFF'+lines.join('\r\n')],{type:'text/csv;charset=utf-8;'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='가계부_식비_생활비.csv';a.click();URL.revokeObjectURL(url);
 }
 
 function moveMonth(step){const el=document.getElementById('monthFilter');const base=el.value||today.slice(0,7);const [y,m]=base.split('-').map(Number);const d=new Date(y,m-1+step,1);el.value=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0');render();}

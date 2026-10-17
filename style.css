@@ -1,1 +1,60 @@
-*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f3;color:#1a1a1a}.wrap{display:flex;min-height:100vh}.left{width:360px;background:#fff;border-right:1px solid #ddd}.right{flex:1}.app-title,.section,.list-header,.item{padding:14px 16px;border-bottom:1px solid #e5e5df}.app-title{font-size:17px;font-weight:600}.app-sub,.section-title,.sms-hint,.import-note,.item-meta,.list-count{font-size:11px;color:#888}.cloud-status{font-size:11px;margin-top:6px;padding:6px 8px;border-radius:7px;background:#eef4fb}.cloud-status.ok{background:#eaf3de;color:#3b6d11}.cloud-status.err{background:#fcebeb;color:#a32d2d}.section-title{margin-bottom:8px}.stats,.mini-stats{display:grid;gap:6px}.stats{grid-template-columns:repeat(3,1fr)}.mini-stats{grid-template-columns:repeat(2,1fr);margin:8px 0}.stat,.mini-stat{background:#f5f5f3;border-radius:8px;padding:8px}.stat-label{font-size:10px;color:#999}.stat-value{font-weight:600}.green{color:#1d9e75}.red{color:#e24b4a}.blue{color:#378add}.bar-row,.field-row,.budget-row,.month-nav,.list-header,.item,.item-right,.list-head-right{display:flex;align-items:center;gap:8px}.bar-bg{flex:1;height:10px;background:#eee;border-radius:5px;overflow:hidden}.bar-fill{height:100%}.bu{background:#378add}.br{background:#1d9e75}.bar-lbl,.bar-pct{font-size:11px;color:#777}.field-row,.budget-row{margin-bottom:7px}.field-row input,.field-row select,.budget-row input,.month-nav input,.filter,.sms-box,button{border:1px solid #ddd;border-radius:8px;background:#f8f8f6;padding:8px;font:inherit}.field-row input,.field-row select,.budget-row input,.month-nav input{flex:1;min-width:0}.sms-box{width:100%;height:72px;resize:none}.add-btn{width:100%;background:#378add;color:#fff;border:none;font-weight:600}.tools{display:grid;grid-template-columns:1fr 1fr;gap:6px}.tool{width:100%}.month-all{margin-top:6px}.list-header{justify-content:space-between;background:#fff}.item{justify-content:space-between;background:#fff}.item-left{min-width:0}.item-desc{font-size:14px}.item-meta{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.item-amt{font-weight:600}.del-btn{background:none;border:none}.badge{font-size:10px;padding:1px 5px;border-radius:4px;background:#e6f1fb}.badge.cash{background:#eaf3de}.badge.cancel{background:#fcebeb}.empty{text-align:center;color:#999;padding:48px 16px}.err{color:#e24b4a;font-size:12px;min-height:14px}@media(max-width:700px){.wrap{display:block}.left{width:100%;border-right:none}.right{width:100%}}
+*{box-sizing:border-box}
+body{margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f5f5f3;color:#1a1a1a}
+.wrap{display:flex;min-height:100vh}
+.left{width:360px;background:#fff;border-right:1px solid #ddd;display:flex;flex-direction:column}
+.right{flex:1;background:#fafaf8}
+.app-title,.section,.list-header,.item{padding:14px 16px;border-bottom:1px solid #e5e5df}
+.app-title{background:#fff}
+.title-row{display:flex;justify-content:space-between;align-items:center;font-size:16px;font-weight:700}
+.app-sub,.section-title,.sms-hint,.item-meta,.list-count{font-size:11px;color:#888}
+.app-sub{margin-top:2px}
+.cloud-status{font-size:10px;font-weight:600;padding:3px 8px;border-radius:12px;background:#eef4fb;color:#378add}
+.cloud-status.ok{background:#eaf3de;color:#286b1b}
+.cloud-status.err{background:#fcebeb;color:#a32d2d}
+.section-title{margin-bottom:8px;font-weight:600}
+.summary-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.budget-toggle-btn{background:none;border:none;font-size:11px;color:#378add;cursor:pointer;padding:2px 4px;font-weight:600}
+.budget-toggle-btn:hover{text-decoration:underline}
+.budget-edit-box{display:flex;gap:6px;margin-bottom:8px}
+.stats,.mini-stats{display:grid;gap:6px}
+.stats{grid-template-columns:repeat(3,1fr)}
+.mini-stats{grid-template-columns:repeat(2,1fr);margin:8px 0}
+.stat,.mini-stat{background:#f5f5f3;border-radius:8px;padding:8px}
+.stat-label{font-size:10px;color:#999}
+.stat-value{font-weight:700;font-size:14px;margin-top:2px}
+.green{color:#1d9e75}
+.red{color:#e24b4a}
+.blue{color:#378add}
+.bar-row,.field-row,.month-nav,.list-header,.item,.item-right,.list-head-right{display:flex;align-items:center;gap:8px}
+.bar-bg{flex:1;height:8px;background:#eee;border-radius:4px;overflow:hidden}
+.bar-fill{height:100%}
+.bu{background:#378add}
+.br{background:#1d9e75}
+.bar-lbl,.bar-pct{font-size:11px;color:#777}
+.field-row{margin-bottom:7px}
+.field-row input,.field-row select,.budget-edit-box input,.month-nav input,.filter,.sms-box,button{border:1px solid #ddd;border-radius:8px;background:#f8f8f6;padding:8px;font:inherit}
+.field-row input,.field-row select,.budget-edit-box input,.month-nav input{flex:1;min-width:0}
+.sms-box{width:100%;height:68px;resize:none;margin-top:2px}
+.parsed-badge{margin-top:8px;padding:8px;background:#eef7f3;border:1px solid #c2e8d7;border-radius:8px;font-size:12px;color:#186348;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px}
+.add-btn{width:100%;background:#378add;color:#fff;border:none;font-weight:600;padding:10px;cursor:pointer}
+.add-btn:hover{background:#2a75c2}
+.tool{cursor:pointer}
+.month-all{margin-top:6px;width:100%}
+.list-header{justify-content:space-between;background:#fff;position:sticky;top:0;z-index:10}
+.item{justify-content:space-between;background:#fff}
+.item-left{min-width:0}
+.item-desc{font-size:14px;font-weight:500}
+.item-meta{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:3px}
+.item-amt{font-weight:700}
+.del-btn{background:none;border:none;color:#aaa;cursor:pointer;font-size:14px;padding:4px}
+.del-btn:hover{color:#e24b4a}
+.badge{font-size:10px;padding:2px 6px;border-radius:4px;background:#e6f1fb;color:#378add;font-weight:500}
+.badge.cash{background:#eaf3de;color:#286b1b}
+.badge.cancel{background:#fcebeb;color:#a32d2d}
+.empty{text-align:center;color:#999;padding:48px 16px}
+.err{color:#e24b4a;font-size:12px;min-height:14px}
+@media(max-width:700px){
+  .wrap{display:block}
+  .left{width:100%;border-right:none}
+  .right{width:100%}
+}
